@@ -17,6 +17,7 @@ const authUser = (req, res, next) => {
   // Parse authorization header
   const credentials = auth(req);
 
+
   // authorization logic
   if (credentials) { // if credentials are available
     User.findOne({ emailAddress: credentials.name }) // find user with matchingt email
@@ -28,14 +29,15 @@ const authUser = (req, res, next) => {
               console.log('Authenticaion successful'); // auth llogging
               res.locals.currentUser = user; // set currentUser on locals for passing through middleware
               next(); // if all is well, move forwards
+            } else { // if passwords don't match
+              console.log('Authentication failed'); // auth logging
+              const err = new Error();
+              err.message = 'Invalid password';
+              err.status = 401;
+              next(err);
             }
           })
-          .catch(err => { // if passwords don't match
-            console.log('Authentication failed'); // auth logging
-            err.message = 'Invalid password';
-            err.status = 401;
-            next(err);
-          });
+          .catch(next);
       })
       .catch(err => { // if the user doc isn't found
         console.log('Authentication failed'); // auth logging
@@ -46,7 +48,7 @@ const authUser = (req, res, next) => {
   } else { // if there is no auth header, send to handler
     console.log('Authentication failed'); // auth logging
     const err = new Error();
-    err.message = 'Auth Header not found';
+    err.message = 'Authenticaion required';
     err.status = 401;
     next(err);
   }
