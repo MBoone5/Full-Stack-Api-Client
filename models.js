@@ -23,6 +23,7 @@ const CourseSchema = new Schema({
   materialsNeeded: { type: String }
 });
 
+// exporting models
 const User = mongoose.model('User', UserSchema);
 const Course = mongoose.model('Course', CourseSchema);
 module.exports = {User, Course};
