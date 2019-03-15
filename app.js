@@ -3,6 +3,9 @@
 // load modules
 const express = require('express');
 const morgan = require('morgan');
+const jsonParser = require('body-parser').json;
+const router = require('./router');
+const mongoose = require('mongoose');
 
 // variable to enable global error logging
 const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
@@ -13,7 +16,24 @@ const app = express();
 // setup morgan which gives us http request logging
 app.use(morgan('dev'));
 
-// TODO setup your api routes here
+// initialzig connection to db
+mongoose.connect('mongodb://127.0.0.1:27017/fsjstd-restapi');
+const db = mongoose.connection;
+
+// connection error handler
+db.on('error', console.error.bind(console, 'connection error:')); // from mongoose documentation
+
+// once connection is open
+db.once('open', () => {
+  // connection message
+  console.log('connection sucessful');
+});
+
+// parsing json
+app.use(jsonParser());
+
+// external routing module
+app.use('/api', router);
 
 // setup a friendly greeting for the root route
 app.get('/', (req, res) => {
@@ -34,7 +54,10 @@ app.use((err, req, res, next) => {
   if (enableGlobalErrorLogging) {
     console.error(`Global error handler: ${JSON.stringify(err.stack)}`);
   }
-
+  const validationExp = /User\svalidation\sfailed/;
+  if (validationExp.test(err.message)) {
+    err.status = 400;
+  }
   res.status(err.status || 500).json({
     message: err.message,
     error: {},
