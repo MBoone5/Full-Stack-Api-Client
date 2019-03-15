@@ -10,44 +10,57 @@ const auth = require('basic-auth');
 const bcrypt = require('bcryptjs');
 const saltRounds = 10;
 
-// user authentication
+/* user authentication
+ followed along with the express rest api authorization 
+ tutoriial here: https://teamtreehouse.com/library/rest-api-authentication-with-express */
 const authUser = (req, res, next) => {
-  // Parse the user's credentials from the Authorization header.
+  // Parse authorization header
+  const credentials = auth(req);
 
-  // If the user's credentials are available...
-  // Attempt to retrieve the user from the data store
-  // by their username (i.e. the user's "key"
-  // from the Authorization header).
-
-  // If a user was successfully retrieved from the data store...
-  // Use the bcryptjs npm package to compare the user's password
-  // (from the Authorization header) to the user's password
-  // that was retrieved from the data store.
-
-  // If the passwords match...
-  // Then store the retrieved user object on the request object
-  // so any middleware functions that follow this middleware function
-  // will have access to the user's information.
-
-  // If user authentication failed...
-  // Return a response with a 401 Unauthorized HTTP status code.
-
-  // Or if user authentication succeeded...
-  // Call the next() method.
+  // authorization logic
+  if (credentials) { // if credentials are available
+    User.findOne({ emailAddress: credentials.name }) // find user with matchingt email
+      .then(doc => {
+        const user = doc;
+        bcrypt.compare(credentials.pass, user.password) // compare passwords
+          .then(result => {
+            if (result) { // successful authentication
+              console.log('Authenticaion successful'); // auth llogging
+              res.locals.currentUser = user; // set currentUser on locals for passing through middleware
+              next(); // if all is well, move forwards
+            }
+          })
+          .catch(err => { // if passwords don't match
+            console.log('Authentication failed'); // auth logging
+            err.message = 'Invalid password';
+            err.status = 401;
+            next(err);
+          });
+      })
+      .catch(err => { // if the user doc isn't found
+        console.log('Authentication failed'); // auth logging
+        err.message = 'User not found';
+        err.status = 401;
+        next(err);
+      });
+  } else { // if there is no auth header, send to handler
+    console.log('Authentication failed'); // auth logging
+    const err = new Error();
+    err.message = 'Auth Header not found';
+    err.status = 401;
+    next(err);
+  }
 };
 // user routes
 router.route('/users')
   .get(authUser, (req, res, next) => {
+    // TODO: update to return currently authed user and not .findone
     // returns currently authed user
     // sends 200
-    Promise.resolve()
-      .then(() => {
-        User.findOne()
-          .then(doc => {
-            res.status(200);
-            res.json(doc);
-          })
-          .catch(next);
+    User.findById(res.locals.currentUser._id)
+      .then(doc => {
+        res.status(200);
+        res.json(doc);
       })
       .catch(next);
   })
@@ -76,47 +89,41 @@ router.route('/courses')
   .get((req, res, next) => {
     // returns a list of courses + user that owns each course
     // sends 200
-    Promise.resolve().then(() => {
-      Course.find({})
-        .exec((err, docs) => {
-          if (err) return next(err); //pass error to catch
-          res.status(200);
-          res.json(docs);
-        });
-    }).catch(next);
+    Course.find({})
+      .exec()
+      .then((err, docs) => {
+        if (err) return next(err); //pass error to catch
+        res.status(200);
+        res.json(docs);
+      })
+      .catch(next);
   })
   .post((req, res, next) => {
     // Creates a course, sets the Location header to the URI for the course, and returns no content
     // sends 201
-    Promise.resolve().then(() => {
-      Course.create(req.body)
-        .then((err, doc) => {
-          if (err) return next(err);
-          res.status(201);
-          res.location(`/api/courses/${doc._id}`);
-        })
-        .catch((err) => {
-          err.status(400);
-          next(err);
-        });
-    }).catch(next);
+    Course.create(req.body)
+      .then((err, doc) => {
+        if (err) return next(err);
+        res.status(201);
+        res.location(`/api/courses/${doc._id}`);
+      })
+      .catch((err) => {
+        err.status(400);
+        next(err);
+      });
   });
 
 // course/id routes
 router.route('/courses/:id')
   .all((req, res, next) => { 
     // find the matchibng course
-    Course.findById(req.params.id, (err, doc) => {
-      if (err) return next(err); // catch error
-      if (!doc) { // if doc is missing
-        err = new Error('Not Found');
-        res.status(404);
-        return next(err);
-      }
-      res.locals.currentCourse = doc;
-      next();
-    }); 
-  })
+    Course.findById(req.params.id)
+      .then(doc => {
+        res.locals.currentCourse = doc;
+        next(); 
+      })
+      .catch(next);
+  }) 
   .get((req, res, next) => {
     // send the course
     Promise.resolve() // Promise.resolve eliminates overhead of try{} catch{}
@@ -128,28 +135,20 @@ router.route('/courses/:id')
   })
   // update the course
   .put((req, res, next) => {
-    Promise.resolve()
+    res.locals.currentCourse.updateOne(req.body)
       .then(() => {
-        res.locals.currentCourse.updateOne(req.body)
-          .then(() => {
-            res.json(res.locals.currentCourse);
-            res.status(204);
-          })
-          .catch(next);
+        res.json(res.locals.currentCourse);
+        res.status(204);
       })
       .catch(next);
   })
   // delete the given course
   .delete((req, res, next) => {
-    Promise.resolve()
+    res.locals.currentCourse.remove()
       .then(() => {
-        res.locals.currentCourse.remove()
-          .then(() => {
-            res.sendStatus(204);
-          })
-          .catch(next); 
+        res.sendStatus(204);
       })
-      .catch(next);
+      .catch(next); 
   });
 
 module.exports = router;
