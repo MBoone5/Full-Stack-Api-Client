@@ -64,7 +64,6 @@ router.route('/users')
       .catch(next);
   })
   .post((req, res, next) => {
-    // TODO: Validation - Sends 500 (Illegal arguments: undefined, number) only occurs of the request body is empty BCRYPT ERROR
     // creates a user
     const newUser = new User(req.body);
     bcrypt.hash(newUser.password, saltRounds) // generate password hash
@@ -99,8 +98,8 @@ router.route('/courses')
       })
       .catch(next);
   })
-  .post((req, res, next) => {
-    // TODO:  Insert auth middleware - Does this need to append the current authed user into the document? - Validation?
+  .post(authUser, (req, res, next) => {
+    // TODO:  Does this need to append the current authed user into the document? - Validation?
     // Creates a course, sets the Location header to the URI for the course, and returns no content
     // sends 201
     Course.create(req.body)
@@ -134,8 +133,7 @@ router.route('/courses/:id')
       .catch(err => next(err));
   })
   // update the course
-  .put((req, res, next) => {
-    // TODO: insert auth middleware - Validation?
+  .put(authUser, (req, res, next) => {
     res.locals.currentCourse.updateOne(req.body)
       .then(() => {
         res.sendStatus(204);
@@ -143,8 +141,7 @@ router.route('/courses/:id')
       .catch(next);
   })
   // delete the given course
-  .delete((req, res, next) => {
-    // TODO: inser auth middleware
+  .delete(authUser, (req, res, next) => {
     res.locals.currentCourse.remove()
       .then(() => {
         res.sendStatus(204);

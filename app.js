@@ -62,7 +62,7 @@ app.use((err, req, res, next) => {
   if (validationExp.test(err.message)) {  // tetsting for a schema validation error
     err.status = 400;
   } else if (hashExp.test(err.message)) {   // testing for .hash fails because a password wasn't sent in the request body
-    err.message = 'Please send user information';
+    err.message = 'Please send user information`';
     err.status = 400;
   }
 
