@@ -53,15 +53,18 @@ const authUser = (req, res, next) => {
 // user routes
 router.route('/users')
   .get(authUser, (req, res, next) => {
+    // TODO: headers correct?
     // returns currently authed user
     User.findById(res.locals.currentUser._id)
       .then(doc => {
         res.status(200);
+        res.location(`api/users/${doc._id}`);
         res.json(doc);
       })
       .catch(next);
   })
   .post((req, res, next) => {
+    // TODO: is location header correct? - Validation?
     // creates a user
     const newUser = new User(req.body);
     bcrypt.hash(newUser.password, saltRounds) // generate password hash
@@ -82,6 +85,7 @@ router.route('/users')
 // course routes
 router.route('/courses')
   .get((req, res, next) => {
+    // TODO: Return user of course as a seperate piece of JSON data
     // returns a list of courses + user that owns each course
     // sends 200
     Promise.resolve() // wrapper for error handling because the promise from .exec cant be chained
@@ -96,6 +100,7 @@ router.route('/courses')
       .catch(next);
   })
   .post((req, res, next) => {
+    // TODO:  Insert auth middleware - Does this need to append the current authed user into the document? - Validation?
     // Creates a course, sets the Location header to the URI for the course, and returns no content
     // sends 201
     Course.create(req.body)
@@ -110,6 +115,7 @@ router.route('/courses')
 // course/id routes
 router.route('/courses/:id')
   .all((req, res, next) => { 
+    // TODO: Needs to send the user who owns the course as well
     // find the matchibng course
     Course.findById(req.params.id)
       .then(doc => {
@@ -129,6 +135,7 @@ router.route('/courses/:id')
   })
   // update the course
   .put((req, res, next) => {
+    // TODO: insert auth middleware - Validation?
     res.locals.currentCourse.updateOne(req.body)
       .then(() => {
         res.sendStatus(204);
@@ -137,6 +144,7 @@ router.route('/courses/:id')
   })
   // delete the given course
   .delete((req, res, next) => {
+    // TODO: inser auth middleware
     res.locals.currentCourse.remove()
       .then(() => {
         res.sendStatus(204);
