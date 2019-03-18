@@ -54,10 +54,19 @@ app.use((err, req, res, next) => {
   if (enableGlobalErrorLogging) {
     console.error(`Global error handler: ${JSON.stringify(err.stack)}`);
   }
+ 
+  // reg exp for error message testing
   const validationExp = /User\svalidation\sfailed/;
-  if (validationExp.test(err.message)) {
+  const hashExp = /Illegal\sarguments:/;
+
+  if (validationExp.test(err.message)) {  // tetsting for a schema validation error
+    err.status = 400;
+  } else if (hashExp.test(err.message)) {   // testing for .hash fails because a password wasn't sent in the request body
+    err.message = 'Please send user information';
     err.status = 400;
   }
+
+  // sending the error 
   res.status(err.status || 500).json({
     message: err.message,
     error: {},

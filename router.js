@@ -52,8 +52,8 @@ const authUser = (req, res, next) => {
 };
 // user routes
 router.route('/users')
-  .get(authUser, (req, res, next) => {
-    // TODO: headers correct?
+  .all(authUser)
+  .get((req, res, next) => {
     // returns currently authed user
     User.findById(res.locals.currentUser._id)
       .then(doc => {
@@ -64,7 +64,7 @@ router.route('/users')
       .catch(next);
   })
   .post((req, res, next) => {
-    // TODO: is location header correct? - Validation?
+    // TODO: Validation - Sends 500 (Illegal arguments: undefined, number) only occurs of the request body is empty BCRYPT ERROR
     // creates a user
     const newUser = new User(req.body);
     bcrypt.hash(newUser.password, saltRounds) // generate password hash
