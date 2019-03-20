@@ -1,0 +1,14 @@
+{
+  "name": "full_stack_app_with_react_and_a_rest_api-v1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "/client/src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "eslint": "^5.15.3"
+  }
+}
