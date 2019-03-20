@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const jsonParser = require('body-parser').json;
 const router = require('./router');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 // variable to enable global error logging
 const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
@@ -29,8 +30,14 @@ db.once('open', () => {
   console.log('connection sucessful');
 });
 
+
+
 // parsing json
 app.use(jsonParser());
+
+// CORS on all routes 
+app.options('*', cors());
+app.use(cors())
 
 // external routing module
 app.use('/api', router);
