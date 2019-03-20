@@ -1,20 +1,13 @@
+// importing modules
 import React, { Component } from 'react';
-import axios from 'axios';
 
+// importing components
+import CourseIndex from './CourseIndex';
+
+// parent wrapper component for client
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {apiTest: null};
-  }
-  
-  componentDidMount() {
-    axios.get('http://localhost:5000/api/courses')
-      .then(result => {
-        console.log(result);
-      }).catch(err => {
-        console.log(err)
-      });
-  }
+
+  // rendering nested component content
   render() {
     return (
       <div className="App">
@@ -22,6 +15,8 @@ class App extends Component {
           <p>
             Edit <code>src/App.js</code> and save to reload.
           </p>
+          
+          <CourseIndex />
         </header>
       </div>
     );
