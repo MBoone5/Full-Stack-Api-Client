@@ -224,7 +224,11 @@ body {
   color: rgba(255, 255, 255, 0.5);
 }
 /* line 25, ../sass/global.sass */
-.header--logo a:hover {
+.header--logo :not(.active):hover {
+  color: #fff;
+}
+.active {
+  font-weight: bold;
   color: #fff;
 }
 /* line 27, ../sass/global.sass */
@@ -389,6 +393,7 @@ p {
   background: #eee;
   text-align: center;
 }
+
 /* line 137, ../sass/global.sass */
 .course--add--module:hover .course--add--title {
   color: #444;
@@ -445,6 +450,11 @@ p {
 /* line 176, ../sass/global.sass */
 .course--title--input {
   font-size: 48px;
+  font-weight: bold;
+  font-family: "Work Sans", sans-serif;
+}
+.course--owner--input {
+  font-size: 34px;
   font-weight: bold;
   font-family: "Work Sans", sans-serif;
 }

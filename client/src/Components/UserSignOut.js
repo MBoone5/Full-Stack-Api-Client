@@ -1,12 +1,15 @@
 // import modules
 import React from 'react';
+import { Redirect } from 'react-router-dom';
 
-// TODO: BUILD METHOD TO SIGN OUT USER, UPDATE HREF JTO REDIRECT TO INDEX
-const UserSignOut = () => {
+// stateless component to sign out a user
+const UserSignOut = props => {
+  // call sign out function
+  props.signOut();
+
+  // redirect to sign in form
   return (
-    <a className="signout" href="#">
-      Sign Out
-    </a>
+    <Redirect to="/signin" />
   );
 };
 

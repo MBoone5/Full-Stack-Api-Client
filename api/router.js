@@ -5,6 +5,11 @@ const express = require('express');
 const router = express.Router();
 const {User, Course} = require('./models');
 const auth = require('basic-auth');
+const cors = require('cors');
+
+// cors middleware
+router.all('*', cors());
+router.use(cors());
 
 // bcrypt refrences
 const bcrypt = require('bcryptjs');
@@ -52,8 +57,7 @@ const authUser = (req, res, next) => {
 };
 // user routes
 router.route('/users')
-  .all(authUser)
-  .get((req, res, next) => {
+  .get(authUser, (req, res, next) => {
     // returns currently authed user
     User.findById(res.locals.currentUser._id)
       .then(doc => {
@@ -81,10 +85,27 @@ router.route('/users')
       .catch(next);
   });
 
+// user/id routes
+router.route('/users/:id')
+  // returns the name of the user with the given id  
+  .get((req, res, next) => {
+    User.findById(req.params.id)
+      .then((result) => {
+        // concatenating the first and last name of the user
+        const fullName = `${result.firstName} ${result.lastName}`;
+
+        // sending response
+        res.status(200);
+        res.json({
+          "fullName": fullName
+        });
+      })
+      .catch(next);
+  })
+
 // course routes
 router.route('/courses')
   .get((req, res, next) => {
-    // TODO: Return user of course as a seperate piece of JSON data
     // returns a list of courses + user that owns each course
     // sends 200
     Promise.resolve() // wrapper for error handling because the promise from .exec cant be chained
@@ -99,7 +120,6 @@ router.route('/courses')
       .catch(next);
   })
   .post(authUser, (req, res, next) => {
-    // TODO:  Does this need to append the current authed user into the document? - Validation?
     // Creates a course, sets the Location header to the URI for the course, and returns no content
     // sends 201
     Course.create(req.body)
@@ -114,7 +134,6 @@ router.route('/courses')
 // course/id routes
 router.route('/courses/:id')
   .all((req, res, next) => { 
-    // TODO: Needs to send the user who owns the course as well
     // find the matchibng course
     Course.findById(req.params.id)
       .then(doc => {
