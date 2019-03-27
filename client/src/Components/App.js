@@ -1,5 +1,5 @@
 // importing modules
-import React, { Component } from 'react';
+import React, { Component, StrictMode } from 'react';
 import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
 import axios from 'axios';
 
@@ -15,6 +15,7 @@ import UpdateCourse from './UpdateCourse';
 import UserSignUp from './UserSignUp';
 import UserSignIn from './UserSignIn';
 import UserSignOut from './UserSignOut';
+import PrivateRoute from './PrivateRoute';
 
 // parent wrapper component for client
 class App extends Component {
@@ -26,6 +27,7 @@ class App extends Component {
     };
   }
   
+  // initializing local storage for credential persistance
 
   // global method to sign in
   signIn = credentials => {
@@ -42,8 +44,10 @@ class App extends Component {
           authedUser: result.data,
           password: credentials.password
         });
+        return true;
       }).catch((err) => {
         console.log(err);
+        return false;
       });
   }
 
@@ -56,29 +60,31 @@ class App extends Component {
     });
   }
 
-
   // rendering nested component content
   render() {
     return (
       <Router>
         <div className="App">
-          <header className="App-header">
-            <Header user={this.state.authedUser} />
-            <Switch>
-              {/* redirect to /courses from / */}
-              <Route exact path="/" render={() => <Redirect to="/courses" />} />
+          <header className="App-header"> 
+            <StrictMode> {/* Rendering with strict mode helps catch potential issues or breaches in best practice*/}
+              <Header user={this.state.authedUser} />
+              <Switch>
+                {/* redirect to /courses from / */}
+                <Route exact path="/" render={() => <Redirect to="/courses" />} />
 
-              {/* courses routes */}
-              <Route exact path="/courses" component={CourseIndex} />
-              <Route exact path="/courses/create" render={() => <CreateCourse user={this.state.authedUser} />} />
-              <Route exact path="/courses/:id" component={CourseDetail} />
-              <Route exact path="/courses/:id/update" component={UpdateCourse}/>
+                {/* courses routes */}
+                <Route exact path="/courses" component={CourseIndex} />
+                <PrivateRoute exact path="/courses/create" user={this.state.authedUser} password={this.state.password} component={CreateCourse} />
+                <PrivateRoute exact path="/courses/:id" user={this.state.authedUser} password={this.state.password} component={CourseDetail} />
+                <PrivateRoute exact path="/courses/:id/update" user={this.state.authedUser} password={this.state.password} component={UpdateCourse} />
 
-              {/* user routes */}
-              <Route exact path="/signup" component={UserSignUp} />
-              <Route exact path="/signin" render={() => <UserSignIn signIn={this.signIn} />} />
-              <Route exact path="/signout" render={() => <UserSignOut signOut={this.signOut} />} />
-            </Switch>
+                {/* user routes */}
+                <Route exact path="/signup" component={UserSignUp} />
+                <Route exact path="/signin" render={() => <UserSignIn signIn={this.signIn} />} />
+                <Route exact path="/signout" render={() => <UserSignOut signOut={this.signOut} />} />
+
+              </Switch>
+            </StrictMode>
           </header>
         </div>
       </Router>

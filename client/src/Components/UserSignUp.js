@@ -16,7 +16,12 @@ class UserSignUp extends Component {
       password: '',
       confirmPassword: '',
       redirect: false,
-      passCheck: false
+      passCheck: false,
+      firstInvalid: false,
+      lastInvalid: false,
+      emailInvalid: false,
+      passInvalid: false,
+      validationErrors: false
     };
 
     // refs
@@ -48,10 +53,7 @@ class UserSignUp extends Component {
     // prevent default
     e.preventDefault();
 
-    // if the password field changes, update the value of password checck
-    if(e.target.name === 'confirmPassword' || e.target.name === 'password' ) {
-      this.checkPasswords();
-    }
+    // TODO: IMPLEMENT METHOD TO MATCH PASSWORDS THAT DOESN'T CONFLICT WITH VALIDATION
 
     // update state
     this.setState({[e.target.name]: e.target.value});
@@ -63,21 +65,79 @@ class UserSignUp extends Component {
     // prevent default
     e.preventDefault();
 
-    // check if passwords match
-    if (this.state.passCheck) {
-      // send form data if passwords match
-      // getting form data
-      const { redirect, ...formData } = this.state;
-  
-      // post data to api
-      axios.post('http://localhost:5000/api/users', formData)
-        .then(() => {     
-          // update state to redirect
-          this.setState({redirect: true});
-        }).catch((err) => {
-          console.log(err);
+
+    // send form data if passwords match
+    // getting form data
+    const { redirect, passCheck, firstInvalid, lastInvalid, emailInvalid, passInvalid, validationErrors, confirmPassword, ...formData } = this.state;
+    console.log(formData);
+
+    // post data to api
+    axios.post('http://localhost:5000/api/users', formData)
+      .then((response) => {     
+        // update state to redirect
+        this.setState({
+          firstInvalid: false,
+          lastInvalid: false,
+          emailInvalid: false,
+          passInvalid: false,
+          validationErrors: false,
+          redirect: true,
         });
-    }
+      })
+      .catch((err) => {
+        // message reference
+        const message = err.response.data.message;
+
+        // regex to find 'title' adnd 'descritipion
+        const firstName = /firstName/;
+        const lastName = /lastName/;
+        const email = /emailAddress/;
+        const password = /password/;
+
+        // update overall validity
+        this.setState({validationErrors: true});
+
+        // testing for matches
+        if (firstName.test(message)) {
+          // update state
+          this.setState({firstInvalid: true});
+        } else {
+          // update validity state
+          this.setState({firstInvalid: false});
+        }
+
+        if (lastName.test(message)) {
+          // update state
+          this.setState({lastInvalid: true});
+        } else {
+          // update validity state
+          this.setState({lastInvalid: false});
+        }
+
+        if (email.test(message)) {
+          // update state
+          this.setState({emailInvalid: true});
+        } else {
+          // update validity state
+          this.setState({emailInvalid: false});
+        }
+
+        if (password.test(message)) {
+          // update state
+          this.setState({passInvalid: true});
+        } else {
+          // update validity state
+          this.setState({passInvalid: false});
+        }
+
+        // checking if there is any form of validation error
+        let validationStates = [this.state.firstInvalid, this.state.lastInvalid, this.state.emailInvalid, this.state.passInvalid];
+        if (validationStates.indexOf(true) !== -1) {
+          // update validation errors state
+          this.setState({validationErrors: true});
+        }
+      } 
+      );
   }
 
   render() {
@@ -89,6 +149,21 @@ class UserSignUp extends Component {
           <div className="grid-33 centered signin">
             <h1>Sign Up</h1>
             <div>
+              <div>
+                {this.state.validationErrors &&
+                  <>
+                    <h2 className="validation--errors--label">Validation Errors</h2>
+                    <div className="validation-errors">
+                      <ul>
+                        {this.state.firstInvalid && <li>Please provide a value for "First Name"</li>}
+                        {this.state.lastInvalid && <li>Please provide a value for "Last Name"</li>}
+                        {this.state.emailInvalid && <li>Please provide a value for "Email Address"</li>} 
+                        {this.state.passInvalid && <li>Please provide a value for "Password"</li>}
+                      </ul>
+                    </div>
+                  </>
+                }
+              </div>
               <form onSubmit={this.handleSubmit}>
                 <div>
                   <input
@@ -98,7 +173,7 @@ class UserSignUp extends Component {
                     placeholder="First Name"
                     value={this.state.firstName}
                     onChange={this.handleChange}
-                    required
+
                   />
                 </div>
                 <div>
@@ -109,7 +184,7 @@ class UserSignUp extends Component {
                     placeholder="Last Name"
                     value={this.state.lastName}
                     onChange={this.handleChange}
-                    required
+                  
                   />
                 </div>
                 <div>
@@ -120,9 +195,6 @@ class UserSignUp extends Component {
                     placeholder="Email Address"
                     value={this.state.emailAddress}
                     onChange={this.handleChange}
-                    required
-                    title="Please provide a valid email"
-                    pattern="(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\x22(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\x22)@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
                   />
                 </div>
                 <div>
@@ -133,7 +205,6 @@ class UserSignUp extends Component {
                     placeholder="Password"
                     value={this.state.password}
                     onChange={this.handleChange}
-                    required
                     ref={this.pass}
                   />
                 </div>
@@ -145,7 +216,6 @@ class UserSignUp extends Component {
                     placeholder="Confirm Password"
                     value={this.state.confirmPassword}
                     onChange={this.handleChange}
-                    required
                     ref={this.match}
                   />
                 </div>

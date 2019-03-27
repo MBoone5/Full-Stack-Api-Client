@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 
 // stateless component for course index elements
 const Course = props => {
-  // TODO: add href once course detail component is built
   return (
     <div className="grid-33">
       <Link to={`/courses/${props.courseId}`} className="course--module course--link">

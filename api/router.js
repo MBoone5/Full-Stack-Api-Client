@@ -75,7 +75,7 @@ router.route('/users')
         // persist new user
         newUser.password = hash; // set password as hash first
         newUser.save()
-          .then(result => {
+          .then(() => {
             res.status(201);
             res.location('/');
             res.send(); 
@@ -153,7 +153,7 @@ router.route('/courses/:id')
   })
   // update the course
   .put(authUser, (req, res, next) => {
-    res.locals.currentCourse.updateOne(req.body)
+    res.locals.currentCourse.updateOne(req.body, {runValidators: true})
       .then(() => {
         res.sendStatus(204);
       })

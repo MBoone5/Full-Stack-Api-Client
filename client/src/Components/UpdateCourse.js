@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import { Link, Redirect } from 'react-router-dom';
 
-// TODO: REFACTOR ONCE AUTHENTICATION IS IMPLEMENTED
+
 class UpdateCourse extends Component {
   constructor(props) {
     super(props);
@@ -20,7 +20,9 @@ class UpdateCourse extends Component {
       estimatedTime: '',
       materialsNeeded: '',
       owner: '',
-      redirect: false
+      redirect: false,
+      titleInvalid: false,
+      descInvalid: false
     };
   }
   
@@ -65,12 +67,52 @@ class UpdateCourse extends Component {
     e.preventDefault();
     const {redirect, owner, courseId, ...formFields} = this.state;
     // PUT form data
-    axios.put(`http://localhost:5000/api/courses/${this.state.courseId}`, formFields)
+    axios.put(`http://localhost:5000/api/courses/${this.state.courseId}`, formFields, {
+      // sending basic authorization credentials
+      auth: {
+        username: this.props.user.emailAddress,
+        password: this.props.password
+      }
+    })
       .then(() => {        
         // upddating state for redirect
-        this.setState({redirect: true});
+        this.setState({
+          titleInvalid: false,
+          descInvalid: false,
+          validationErrors: false,
+          redirect: true
+        });
       }).catch(err => {
-        console.log(err); 
+        // message reference
+        const message = err.response.data.message;
+
+        // regex to find 'title' adnd 'descritipion
+        const title = /title/;
+        const description = /description/;
+
+        // testing for matches
+        if (title.test(message) && description.test(message)) {
+          // update state
+          this.setState({
+            titleInvalid: true,
+            descInvalid: true,
+            validationErrors: true
+          });
+        } else if (title.test(message)) {
+          // update state
+          this.setState({
+            titleInvalid: true,
+            descInvalid: false,
+            validationErrors: true
+          });
+        } else {
+          // update state
+          this.setState({
+            titleInvalid: false,
+            descInvalid: true,
+            validationErrors: true
+          });
+        } 
       });
 
   }
@@ -83,6 +125,19 @@ class UpdateCourse extends Component {
         <div className="bounds course--detail">
           <h1>Update Course</h1>
           <div>
+            <div>
+              {this.state.validationErrors &&
+                <>
+                  <h2 className="validation--errors--label">Validation Errors</h2>
+                  <div className="validation-errors">
+                    <ul>
+                      {this.state.titleInvalid && <li>Please provide a value for "Title"</li>}
+                      {this.state.descInvalid && <li>Please provide a value for "Description"</li>}
+                    </ul>
+                  </div>
+                </>
+              }
+            </div>
             <form onSubmit={this.handleSubmit}>
               <div className="grid-66">
                 <div className="course--header">

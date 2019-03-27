@@ -761,3 +761,12 @@ input:focus {
 .course--description textarea {
   margin-bottom: 20px;
 }
+
+/* authenticaion failure message */
+.form--message {
+  font-weight: bold;
+  font-size: 20px;
+  color: red;
+  text-align: center;
+  margin-bottom: 10px; 
+}

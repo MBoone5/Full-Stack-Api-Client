@@ -12,7 +12,10 @@ class CreateCourse extends Component {
       description: '',
       estimatedTime: '',
       materialsNeeded: '',
-      redirect: false
+      redirect: false,
+      validationErrors: false,
+      titleInvalid: false,
+      descInvalid: false
     };
   }
 
@@ -33,21 +36,65 @@ class CreateCourse extends Component {
     // get form data
     const {redirect, ...formData } = this.state;
 
-    // POST request to api to create a new course
-    axios.post('http://localhost:5000/api/courses', formData)
-      .then(() => {
-        // update redirect state
-        this.setState({redirect: true});
+    // reference to user document
+    const user = { user: this.props.user};
 
-      }).catch((err) => {
-        console.log(err);
+    // combining form data with user object
+    const courseData = {...user, ...formData};
+
+    // POST request to api to create a new course
+    axios.post('http://localhost:5000/api/courses', courseData, {
+      // sending basic authorization credentials
+      auth: {
+        username: this.props.user.emailAddress,
+        password: this.props.password
+      }
+    })
+      .then(response => {
+        // update redirect state
+        this.setState({ 
+          titleInvalid: false,
+          descInvalid: false,
+          validationErrors: false,
+          redirect: true
+        });
+      })
+      .catch(err => {
+        // message reference
+        const message = err.response.data.message;
+
+        // regex to find 'title' adnd 'descritipion
+        const title = /title/;
+        const description = /description/;
+
+        // testing for matches
+        if (title.test(message) && description.test(message)) {
+          // update state
+          this.setState({
+            titleInvalid: true,
+            descInvalid: true,
+            validationErrors: true
+          });
+        } else if (title.test(message)) {
+          // update state
+          this.setState({
+            titleInvalid: true,
+            descInvalid: false,
+            validationErrors: true
+          });
+        } else  {
+          // update state
+          this.setState({
+            titleInvalid: false,
+            descInvalid: true,
+            validationErrors: true
+          });
+        }
       });
   }
-
-  //  TODO: validation errors
   render() {
     if (this.state.redirect) {
-      return <Redirect to="/courses" />
+      return <Redirect to="/courses" />;
     } else {
       return (
         <div className="bounds course--detail">
@@ -55,13 +102,17 @@ class CreateCourse extends Component {
             <h1>Create Course</h1>
             <div>
               <div>
-                <h2 className="validation--errors--label">Validation errors</h2>
-                <div className="validation-errors">
-                  <ul>
-                    <li>Please provide a value for "Title"</li>
-                    <li>Please provide a value for "Description"</li>
-                  </ul>
-                </div>
+                {this.state.validationErrors && 
+                  <>
+                  <h2 className="validation--errors--label">Validation Errors</h2>
+                    <div className="validation-errors">
+                      <ul>
+                        {this.state.titleInvalid && <li>Please provide a value for "Title"</li>}
+                        {this.state.descInvalid && <li>Please provide a value for "Description"</li>}
+                      </ul>
+                    </div>
+                  </>
+                }
               </div>
               <form onSubmit={this.handleSubmit}>
                 <div className="grid-66">
@@ -76,7 +127,6 @@ class CreateCourse extends Component {
                         placeholder="Course title..."
                         value={this.state.title}
                         onChange={this.handleChange}
-                        required
                       />
                     </div>
                     {(this.props.user &&
@@ -93,7 +143,6 @@ class CreateCourse extends Component {
                         placeholder="Course description..."
                         value={this.state.description}
                         onChange={this.handleChange}
-                        required
                       />
                     </div>
                   </div>

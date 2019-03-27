@@ -24,13 +24,13 @@ class UserSignIn extends Component {
     e.preventDefault();
 
     // get user credentials
-    const {redirect, ...credentials} = this.state;
+    const {redirect, authenticationFail, ...credentials} = this.state;
 
-    // call signIn function
+    // attempt to log user in
     this.props.signIn(credentials);
 
-    // update redirect
-    this.setState({redirect: true});
+    // redirect
+    this.setState({redirect: true})
   }
 
   render() {

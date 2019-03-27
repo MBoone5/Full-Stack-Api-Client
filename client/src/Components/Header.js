@@ -1,13 +1,13 @@
 // import modules
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 const Header = props => {
   return (
     <div className="header">
       <div className="bounds">
         <div>
-          <h1 className="header--logo">Courses</h1>
+          <Link to="/courses" className="header--logo">Courses</Link>
           {props.user ? (
             <nav>
               <span>Welcome, {`${props.user.firstName} ${props.user.lastName}`}</span>
